@@ -2,7 +2,7 @@ name: Daily Scraper Delhi
 
 on:
   schedule:
-    - cron: '0 1 * * *'   # Runs daily at 6:30 AM IST → 1:00 AM UTC
+    - cron: "0 1 * * *"   # Runs daily at 6:30 AM IST → 1:00 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -26,13 +26,14 @@ jobs:
       run: |
         git clone git@github.com:LongwayDataTeam/Amz_Flp_Data_Scraper_Delhi.git
 
-    # ✅ Step 3: Set up Python
+    # ✅ Step 3: Set up Python (with pip cache)
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
+        cache: "pip"
 
-    # ✅ Step 4: Install ONLY Google Chrome (No ChromeDriver)
+    # ✅ Step 4: Install ONLY Google Chrome (NO chromedriver)
     - name: Install Google Chrome
       run: |
         sudo apt-get update
@@ -41,19 +42,27 @@ jobs:
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
         sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
 
+        echo "✅ Installed Chrome Version:"
         google-chrome --version
 
-    # ✅ Step 5: Install Python Dependencies
+    # ✅ Step 5: Remove any system ChromeDriver (IMPORTANT FIX)
+    - name: Remove system ChromeDriver
+      run: |
+        sudo rm -f /usr/local/bin/chromedriver
+        sudo rm -f /usr/bin/chromedriver
+        echo "✅ Old ChromeDriver removed"
+
+    # ✅ Step 6: Install Python Dependencies + webdriver-manager
     - name: Install Python dependencies
       run: |
         cd Amz_Flp_Data_Scraper_Delhi
         pip install --upgrade pip
         pip install -r requirements.txt
 
-        # ✅ Mandatory for correct ChromeDriver match
+        # ✅ Required for correct ChromeDriver auto-match
         pip install webdriver-manager
 
-    # ✅ Step 6: Run Scraper Script
+    # ✅ Step 7: Run Scraper Script
     - name: Run scraping script
       env:
         GSHEET_CREDENTIALS: ${{ secrets.GSHEET_CREDENTIALS }}
